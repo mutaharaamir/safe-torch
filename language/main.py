@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from lib.prune import prune_safe, prune_alps, prune_wanda, prune_magnitude, prune_sparsegpt, prune_sam_imp
+from lib.prune import prune_safe, prune_alps, prune_wanda, prune_magnitude, prune_sparsegpt
 from lib.eval import eval_ppl
 from lib.utils import check_sparsity
 from absl import logging, app, flags
@@ -36,8 +36,7 @@ def get_llm(
         model_name, 
         low_cpu_mem_usage=True,
         device_map="cpu",
-        trust_remote_code = True,
-        use_flash_attention_2=False
+        trust_remote_code = True
     )
     assert seqlen<=model.config.max_position_embeddings, f"seqlen({seqlen}) should be less than or equal to model.config.max_position_embeddings({model.config.max_position_embeddings})"
     model.seqlen = seqlen

@@ -167,6 +167,12 @@ def prepare_calibration_input(
         def __init__(self, module):
             super().__init__()
             self.module = module
+
+            ### Gemini ###
+            for attr in ['attention_type', 'layer_idx']:
+                if hasattr(module, attr):
+                    setattr(self, attr, getattr(module, attr))
+            ### End ### 
         
         def forward(self, inp, **kwargs):
             if cache['i'] < nsamples: 

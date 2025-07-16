@@ -74,6 +74,17 @@ def prune_model_with_linear_wrapper(
         current_inps = inps.to(current_layer_processing_device)
         current_attention_mask = attention_mask.to(current_layer_processing_device) if attention_mask is not None else None
         current_position_ids = position_ids.to(current_layer_processing_device) if position_ids is not None else None
+        
+        ### Gemini - Make this work with more recent version of transformers library
+        ### that only calculates RoPE once ###
+        import inspect
+        layer_kwargs = {
+            "attention_mask": current_attention_mask,
+            "position_ids": current_position_ids,
+        }
+        if "position_embeddings" in inspect.signature(layer.forward).parameters and hasattr(model.model, "rotary_emb") and current_position_ids is not None:
+            layer_kwargs["position_embeddings"] = model.model.rotary_emb(current_inps[0].unsqueeze(0), current_position_ids)
+        ### END ###
 
         prunable_submodules_map = find_layers(layer)
         pruner_instances = {}
@@ -95,7 +106,10 @@ def prune_model_with_linear_wrapper(
         with torch.no_grad():
             for j in range(args.nsamples):
                 sample_input = current_inps[j].unsqueeze(0)
-                _ = layer(sample_input, attention_mask=current_attention_mask, position_ids=current_position_ids)[0] # Output captured by hooks
+                # _ = layer(sample_input, attention_mask=current_attention_mask, position_ids=current_position_ids)[0] # Output captured by hooks
+                ### Gemini ###
+                _ = layer(sample_input, **layer_kwargs)[0]
+                ### END ###
         
         for h in handles: # Remove hooks
             h.remove()
@@ -122,8 +136,7 @@ def prune_model_with_linear_wrapper(
                 sample_input = current_inps[j].unsqueeze(0)
                 current_layer_outputs[j] = layer(
                     sample_input,
-                    attention_mask=current_attention_mask,
-                    position_ids=current_position_ids
+                    **layer_kwargs
                 )[0].to('cpu')
 
         layers[i] = layer.to('cpu')  # Offload layer
@@ -264,7 +277,17 @@ def prune_safe(
     # Pruning based on SAFE
     for i in range(len(layers)):
         layer = layers[i].float().to(device) 
-        current_inps = inps.float().to(device) 
+        current_inps = inps.float().to(device)
+        
+        ### Gemini ###
+        import inspect
+        layer_kwargs = {
+            "attention_mask": attention_mask,
+            "position_ids": position_ids,
+        }
+        if "position_embeddings" in inspect.signature(layer.forward).parameters and hasattr(model.model, "rotary_emb") and position_ids is not None:
+            layer_kwargs["position_embeddings"] = model.model.rotary_emb(current_inps[0].unsqueeze(0), position_ids)
+        ### END ###
         
         learning_rate = args.learning_rate
         logging.info(f'Pruning layer {i} with SAFE. Learning rate: {learning_rate}')
@@ -295,7 +318,7 @@ def prune_safe(
         with torch.no_grad():
             for j in range(args.nsamples):
                 sample_input = current_inps[j].unsqueeze(0) 
-                dense_layer_targets[j] = layer(sample_input, attention_mask=attention_mask, position_ids=position_ids)[0].detach().to('cpu')
+                dense_layer_targets[j] = layer(sample_input, **layer_kwargs)[0].detach().to('cpu')
         
         if args.activation: 
             for h in handles_act:
@@ -376,7 +399,7 @@ def prune_safe(
                 
                 with torch.enable_grad(): 
                     with autocast(device_type='cuda', dtype=torch.bfloat16):
-                        outputs = layer(batch_inputs, attention_mask=attention_mask, position_ids=position_ids)[0]
+                        outputs = layer(batch_inputs, **layer_kwargs)[0]
                         loss = loss_fn(outputs, batch_targets)
                         if args.accumulation_steps > 1:
                             loss = loss / args.accumulation_steps
@@ -393,7 +416,7 @@ def prune_safe(
                         if sam_input_cache: 
                             for cached_batch_input in sam_input_cache:
                                 with autocast(device_type='cuda', dtype=torch.bfloat16):
-                                    loss_sam_step = loss_fn(layer(cached_batch_input, attention_mask=attention_mask, position_ids=position_ids)[0], batch_targets)
+                                    loss_sam_step = loss_fn(layer(cached_batch_input, **layer_kwargs)[0], batch_targets)
                                 if args.accumulation_steps > 1:
                                      loss_sam_step = loss_sam_step / args.accumulation_steps
                                 loss_sam_step.backward() 
@@ -401,7 +424,7 @@ def prune_safe(
                         else: 
                             if args.accumulation_steps == 1: 
                                 with autocast(device_type='cuda', dtype=torch.bfloat16):
-                                    outputs_perturbed = layer(batch_inputs, attention_mask=attention_mask, position_ids=position_ids)[0]
+                                    outputs_perturbed = layer(batch_inputs, **layer_kwargs)[0]
                                     loss_perturbed = loss_fn(outputs_perturbed, batch_targets)
                                 loss_perturbed.backward()
 
@@ -425,8 +448,11 @@ def prune_safe(
         with torch.no_grad():
             for j in range(args.nsamples):
                 sample_input = current_inps[j].unsqueeze(0) # Inputs are already on device
-                current_layer_outputs[j] = layer(sample_input, attention_mask=attention_mask, position_ids=position_ids)[0].to('cpu')
-
+                # current_layer_outputs[j] = layer(sample_input, attention_mask=attention_mask, position_ids=position_ids)[0].to('cpu')
+                ### Gemini ###
+                current_layer_outputs[j] = layer(sample_input, **layer_kwargs)[0].to('cpu')
+                ### END ###
+                
         layers[i] = layer.to('cpu') # Offload layer
         if args.activation:
             del importance_matrix
