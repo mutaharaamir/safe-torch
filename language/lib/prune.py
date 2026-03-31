@@ -518,3 +518,44 @@ def prune_magnitude(
         layers[i] = layer.to('cpu') 
         torch.cuda.empty_cache()
     logging.info("Magnitude pruning finished.")
+
+###
+
+def prune_rigl(
+    args: Any,
+    model: AutoModelForCausalLM,
+    dataloader: Any,
+    device: torch.device,
+    prune_n: int = 0,
+    prune_m: int = 0
+):
+    """
+    Prunes the model using the RigL method.
+    RigL Reference: https://github.com/google-research/rigl
+
+    Args:
+        args: Configuration object with `sparsity_ratio (int)`, `nsamples (int)`, `seed (int)`, `dataset (str)`, `rho (float)` (for ALPS_admm).
+        model (AutoModelForCausalLM): The model to prune.
+        dataloader (Any): The dataloader for loading calibration data.
+        device (torch.device): The default device. Layer-specific devices handled if model.hf_device_map exists.
+        prune_n (int): N for N:M structured sparsity (0 for unstructured).
+        prune_m (int): M for N:M structured sparsity (0 for unstructured).
+    """
+    prune_model_with_linear_wrapper(RigLWrapper, args, model, dataloader, device, prune_n, prune_m)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

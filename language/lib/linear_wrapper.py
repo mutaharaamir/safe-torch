@@ -628,3 +628,22 @@ class WrappedGPT:
         self.nsamples += tmp
         inp = inp.float()
         self.scaler_row += torch.norm(inp, p=2, dim=1) ** 2  / self.nsamples
+
+###
+
+class RigLWrapper(LinearPrunerWrapperBase):
+    """
+    Wraps linear layer using the RigL method
+    Original Code: https://github.com/google-research/rigl/
+    """
+    def init_info(self):
+        pass
+        
+    def compute_per_batch_info(self, inp):
+        return 0
+        
+    def prune_linear(self):
+        print("inside rigl:prune_linear :)")
+        
+    def free(self):
+        torch.cuda.empty_cache()
