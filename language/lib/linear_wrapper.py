@@ -636,6 +636,8 @@ class RigLWrapper(LinearPrunerWrapperBase):
     Wraps linear layer using the RigL method
     Original Code: https://github.com/google-research/rigl/
     """
+    PRUNER_NAME = "RigL"
+    
     def init_info(self):
         pass
         

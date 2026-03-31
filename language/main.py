@@ -103,6 +103,8 @@ def main(argv):
             prune_safe(FLAGS, model, tokenizer, device, prune_n=prune_n, prune_m=prune_m)
         elif FLAGS.prune_method == "sam_imp":
             prune_sam_imp(FLAGS, model, tokenizer, device, prune_n=prune_n, prune_m=prune_m)
+        elif FLAGS.prune_method == "rigl":
+            prune_rigl(FLAGS, model, dataloader, device, prune_n=prune_n, prune_m=prune_m)
         
     logging.info("pruning finished")
     model = model.to(torch.float16)
