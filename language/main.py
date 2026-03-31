@@ -132,7 +132,7 @@ if __name__ == '__main__':
     flags.DEFINE_integer('nsamples', 128, 'Number of calibration samples.')
     flags.DEFINE_float('sparsity_ratio', 0.5, 'Sparsity level')
     flags.DEFINE_enum('sparsity_type', "unstructured", ["unstructured", "4:8", "2:4"], 'Type of sparsity.')
-    flags.DEFINE_enum('prune_method', "safe", ["magnitude", "wanda", "sparsegpt", "safe", "alps","sam-imp"], 'Pruning method.')
+    flags.DEFINE_enum('prune_method', "safe", ["magnitude", "wanda", "sparsegpt", "safe", "alps","sam-imp", "rigl"], 'Pruning method.')
     flags.DEFINE_enum('dataset', 'c4', ["c4", "wikitext2"], 'Calibration dataset.')
     
     # SAFE hyperparams
