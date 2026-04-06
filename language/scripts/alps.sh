@@ -1,0 +1,10 @@
+python /home/c01toja/CISPA-projects/training_dynamics-2024/SAFEgptPrune/safe-torch/language/main.py \
+    --model meta-llama/Llama-2-7b-hf \
+    --prune_method alps \
+    --sparsity_ratio "$1" \
+    --sparsity_type "unstructured" \
+    --dataset "$2"  \
+    --nsamples 128 \
+    --seed "$3"  \
+    --wandb True \
+    --wandb_project alps \
