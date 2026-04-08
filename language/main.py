@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from lib.prune import prune_safe, prune_alps, prune_wanda, prune_magnitude, prune_sparsegpt, prune_sam_imp
+from lib.prune import prune_safe, prune_alps, prune_wanda, prune_magnitude, prune_sparsegpt
 from lib.eval import eval_ppl
 from lib.utils import check_sparsity
 from absl import logging, app, flags
