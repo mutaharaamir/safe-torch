@@ -152,3 +152,9 @@ if __name__ == '__main__':
     flags.DEFINE_string('wandb_project', 'safe-torch', 'wandb project name.')
     
     app.run(main)
+
+# Save the pruned model weights and configuration to a directory
+output_dir = "./pruned_model_output"
+model.save_pretrained(output_dir)
+tokenizer.save_pretrained(output_dir)
+print(f"Pruned model successfully saved to {output_dir}")
