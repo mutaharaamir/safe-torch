@@ -124,6 +124,13 @@ def main(argv):
     if FLAGS.wandb:
         wandb.log({"sparsity_ratio": sparsity_ratio, **{f"ppl_test({key})": value for key, value in ppl_test.items()}})
 
+
+    # Save the pruned model weights and configuration to a directory
+    output_dir = "./pruned_model_output"
+    model.save_pretrained(output_dir)
+    tokenizer.save_pretrained(output_dir)
+    print(f"Pruned model successfully saved to {output_dir}")
+
 if __name__ == '__main__':
     flags.DEFINE_string('model', 'meta-llama/Llama-2-7b-hf', 'model to prune.')
     flags.DEFINE_integer('seqlen', 2048, 'Sequence length for the model.')
@@ -152,9 +159,3 @@ if __name__ == '__main__':
     flags.DEFINE_string('wandb_project', 'safe-torch', 'wandb project name.')
     
     app.run(main)
-
-# Save the pruned model weights and configuration to a directory
-output_dir = "./pruned_model_output"
-model.save_pretrained(output_dir)
-tokenizer.save_pretrained(output_dir)
-print(f"Pruned model successfully saved to {output_dir}")
